@@ -3,6 +3,7 @@ const cors = require("cors");
 const axios = require("axios");
 const cron = require("node-cron");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 
@@ -20,6 +21,31 @@ const CHECK_INTERVAL = "*/2 * * * *";
 const GEOS = ["us", "ru", "jp", "de"];
 
 // ─── Хранилище ────────────────────────────────────────────
+
+const APPS_FILE = path.join(__dirname, "apps.json");
+
+function loadApps() {
+  try {
+    if (!fs.existsSync(APPS_FILE)) {
+      fs.writeFileSync(APPS_FILE, "[]", "utf8");
+    }
+    const raw = fs.readFileSync(APPS_FILE, "utf8");
+    const data = JSON.parse(raw);
+    apps.length = 0;
+    apps.push(...data);
+    log(`Загружено ${apps.length} приложений из apps.json`);
+  } catch (err) {
+    log("Ошибка загрузки apps.json: " + err.message);
+  }
+}
+
+function saveApps() {
+  try {
+    fs.writeFileSync(APPS_FILE, JSON.stringify(apps, null, 2), "utf8");
+  } catch (err) {
+    log("Ошибка сохранения apps.json: " + err.message);
+  }
+}
 
 const apps = [];
 
@@ -95,6 +121,7 @@ async function checkApp(app) {
       // Если хотя бы в одном GEO вышло — считаем общим релизом
       app.released = true;
       app.releaseTime = releaseTime;
+      saveApps();
       return;
 
     } catch (error) {
@@ -157,6 +184,7 @@ app.post("/add", (req, res) => {
   });
 
   log(`Добавлено: ${url}`);
+  saveApps();
   res.json({ message: "Добавлено", geos: geoUrls });
 });
 
@@ -181,6 +209,7 @@ app.delete("/remove", (req, res) => {
 
   apps.splice(index, 1);
   log(`Удалено: ${url}`);
+  saveApps();
   res.json({ message: "Удалено" });
 });
 
@@ -199,5 +228,6 @@ cron.schedule(CHECK_INTERVAL, checkAllApps);
 
 app.listen(PORT, () => {
   log(`Сервер запущен на порту ${PORT}`);
+  loadApps();
   log("🚀 Сервер полностью готов");
 });
