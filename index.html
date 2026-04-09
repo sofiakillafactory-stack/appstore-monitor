@@ -4,106 +4,351 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>App Store Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f2f2f7;
+      --card: #ffffff;
+      --border: #e5e5ea;
+      --text: #1c1c1e;
+      --muted: #8e8e93;
+      --blue: #007aff;
+      --green: #34c759;
+      --red: #ff3b30;
+      --yellow: #ff9f0a;
+      --geo-active: #34c759;
+      --geo-inactive: #d1d1d6;
+      --radius: 14px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f5f7;
-      padding: 40px 16px;
+      font-family: "DM Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 32px 16px 64px;
+      min-height: 100vh;
     }
 
     .container {
-      max-width: 640px;
+      max-width: 620px;
       margin: 0 auto;
     }
 
-    .card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 16px;
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
     }
 
+    .header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .header h1 span {
+      color: var(--blue);
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Input row ── */
     .input-row {
       display: flex;
       gap: 8px;
     }
 
-    input {
+    input[type="text"] {
       flex: 1;
-      height: 40px;
-      padding: 0 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: #f9f9fb;
+      outline: none;
+      transition: border-color 0.15s;
     }
 
-    button {
-      background: #0071e3;
-      color: #fff;
+    input[type="text"]:focus {
+      border-color: var(--blue);
+      background: #fff;
+    }
+
+    .btn {
+      height: 42px;
+      padding: 0 18px;
       border: none;
-      border-radius: 8px;
-      padding: 0 16px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
       cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap;
     }
 
-    .notice { margin-top: 10px; font-size: 13px; }
-    .error { color: red; }
-    .success { color: green; }
+    .btn:active { transform: scale(0.97); }
 
-    .app-item {
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-secondary {
+      background: #f2f2f7;
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+
+    .notice {
+      margin-top: 10px;
+      font-size: 13px;
+      min-height: 18px;
+    }
+    .error { color: var(--red); }
+    .success { color: var(--green); }
+    .info { color: var(--muted); }
+
+    /* ── Toolbar ── */
+    .toolbar {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .toolbar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    /* ── App Item ── */
+    .app-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .app-item {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
       gap: 12px;
-      padding: 10px 0;
-      border-top: 1px solid #eee;
+      align-items: start;
+      padding: 14px 0;
+      border-top: 1px solid var(--border);
+      animation: fadeIn 0.25s ease;
+    }
+
+    .app-item:first-child { border-top: none; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .app-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
+      width: 48px;
+      height: 48px;
+      border-radius: 11px;
+      background: var(--bg);
+      object-fit: cover;
+      flex-shrink: 0;
     }
 
-    .app-info {
-      flex: 1;
+    .app-icon-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 11px;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .app-body {
+      min-width: 0;
     }
 
     .app-name {
       font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .app-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+    }
+
+    .app-rating {
+      font-size: 12px;
+      color: var(--yellow);
       font-weight: 500;
     }
 
     .app-url {
-      font-size: 12px;
-      color: #888;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: "DM Mono", monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 280px;
+      display: block;
+      margin-top: 2px;
     }
 
-    .badge {
+    /* ── GEO badges ── */
+    .geo-row {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .geo-badge {
+      font-size: 11px;
+      font-weight: 600;
+      font-family: "DM Mono", monospace;
+      padding: 2px 7px;
+      border-radius: 5px;
+      letter-spacing: 0.3px;
+    }
+
+    .geo-active {
+      background: #d4f5de;
+      color: #1a7a3a;
+    }
+
+    .geo-inactive {
+      background: #f2f2f7;
+      color: #aeaeb2;
+    }
+
+    /* ── Right side ── */
+    .app-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .status-badge {
       font-size: 12px;
+      font-weight: 500;
       padding: 4px 10px;
       border-radius: 20px;
+      white-space: nowrap;
     }
 
-    .pending { background: #fff3cd; }
-    .released { background: #d4edda; }
+    .status-pending {
+      background: #fff3cd;
+      color: #a07000;
+    }
+
+    .status-released {
+      background: #d4f5de;
+      color: #1a7a3a;
+    }
+
+    .release-time {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: "DM Mono", monospace;
+    }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 2px;
+      border-radius: 6px;
+      font-size: 16px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+
+    .btn-delete:hover { color: var(--red); }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      padding: 32px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 
 <body>
 <div class="container">
 
-  <h2>App Store Monitor</h2>
+  <div class="header">
+    <h1>App Store <span>Monitor</span></h1>
+  </div>
 
+  <!-- Добавление -->
   <div class="card">
     <div class="input-row">
-      <input id="urlInput" placeholder="ID или ссылка" />
-      <button onclick="addApp()">Добавить</button>
+      <input id="urlInput" type="text" placeholder="ID приложения или ссылка App Store" />
+      <button class="btn btn-primary" onclick="addApp()">Добавить</button>
     </div>
     <div id="notice" class="notice"></div>
   </div>
 
+  <!-- Список -->
   <div class="card">
-    <div id="appList"></div>
+    <div class="toolbar">
+      <span class="toolbar-title">Приложения</span>
+      <button class="btn btn-secondary" id="checkBtn" onclick="manualCheck()">Проверить сейчас</button>
+    </div>
+    <div class="app-list" id="appList">
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        Загрузка...
+      </div>
+    </div>
   </div>
 
 </div>
@@ -111,36 +356,47 @@
 <script>
 const API = 'https://appstore-monitor.onrender.com';
 
-// 🔥 Получаем данные приложения (иконка + название)
+// ─── iTunes API ───────────────────────────────────────────
+
+const infoCache = {};
+
 async function fetchAppInfo(url) {
+  if (infoCache[url]) return infoCache[url];
+
   try {
-    const id = url.match(/id(\\d+)/)[1];
+    const match = url.match(/id(\d+)/);
+    if (!match) return null;
+
+    const id = match[1];
     const res = await fetch(`https://itunes.apple.com/lookup?id=${id}`);
     const data = await res.json();
 
-    if (data.results.length === 0) return null;
+    if (!data.results.length) return null;
 
-    return {
-      name: data.results[0].trackName,
-      icon: data.results[0].artworkUrl100
+    const r = data.results[0];
+    const info = {
+      name: r.trackName,
+      icon: r.artworkUrl100,
+      rating: r.averageUserRating ? r.averageUserRating.toFixed(1) : null,
     };
+
+    infoCache[url] = info;
+    return info;
   } catch {
     return null;
   }
 }
 
+// ─── Add ─────────────────────────────────────────────────
+
 async function addApp() {
   const input = document.getElementById('urlInput');
-  const notice = document.getElementById('notice');
-  let url = input.value.trim();
+  const url = input.value.trim();
 
-  if (!url) {
-    showNotice('Введите ID или ссылку', 'error');
-    return;
-  }
+  if (!url) { showNotice('Введите ID или ссылку', 'error'); return; }
 
   if (!/^\d+$/.test(url) && !url.includes('apps.apple.com')) {
-    showNotice('Введите ID или ссылку', 'error');
+    showNotice('Введите корректный ID или ссылку App Store', 'error');
     return;
   }
 
@@ -156,28 +412,61 @@ async function addApp() {
     if (!res.ok) {
       showNotice(data.error, 'error');
     } else {
-      showNotice('Добавлено!', 'success');
+      showNotice('Приложение добавлено!', 'success');
       input.value = '';
       loadApps();
     }
-
   } catch {
     showNotice('Сервер не отвечает', 'error');
   }
 }
 
-function showNotice(text, type) {
-  const el = document.getElementById('notice');
-  el.textContent = text;
-  el.className = `notice ${type}`;
+// ─── Delete ───────────────────────────────────────────────
+
+async function removeApp(url) {
+  try {
+    const res = await fetch(`${API}/remove`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+
+    if (res.ok) loadApps();
+  } catch {
+    showNotice('Ошибка удаления', 'error');
+  }
 }
+
+// ─── Manual check ─────────────────────────────────────────
+
+async function manualCheck() {
+  const btn = document.getElementById('checkBtn');
+  btn.innerHTML = '<span class="spinner"></span>Проверяю...';
+  btn.disabled = true;
+  btn.style.color = '#8e8e93';
+
+  try {
+    await fetch(`${API}/check`, { method: 'POST' });
+    showNotice('Проверка запущена', 'info');
+    setTimeout(loadApps, 3000);
+  } catch {
+    showNotice('Сервер не отвечает', 'error');
+  } finally {
+    setTimeout(() => {
+      btn.innerHTML = 'Проверить сейчас';
+      btn.disabled = false;
+      btn.style.color = '';
+    }, 3000);
+  }
+}
+
+// ─── Load & Render ────────────────────────────────────────
 
 async function loadApps() {
   try {
     const res = await fetch(`${API}/list`);
     const apps = await res.json();
-
-    renderList(apps);
+    await renderList(apps);
   } catch {}
 }
 
@@ -185,33 +474,99 @@ async function renderList(apps) {
   const container = document.getElementById('appList');
 
   if (!apps.length) {
-    container.innerHTML = 'Нет приложений';
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        Нет приложений для мониторинга
+      </div>`;
     return;
   }
 
   const items = await Promise.all(apps.map(async app => {
     const info = await fetchAppInfo(app.baseUrl);
 
+    const iconHtml = info?.icon
+      ? `<img class="app-icon" src="${info.icon}" onerror="this.style.display='none'" />`
+      : `<div class="app-icon-placeholder">📱</div>`;
+
+    const ratingHtml = info?.rating
+      ? `<span class="app-rating">★ ${info.rating}</span>`
+      : '';
+
+    const appName = info?.name || extractId(app.baseUrl);
+
+    const geoHtml = app.geos.map(g => {
+      const label = g.url.split('/')[3].toUpperCase();
+      const cls = g.released ? 'geo-active' : 'geo-inactive';
+      return `<span class="geo-badge ${cls}">${label}</span>`;
+    }).join('');
+
+    const statusHtml = app.released
+      ? `<span class="status-badge status-released">✓ Вышло</span>`
+      : `<span class="status-badge status-pending">⏳ Ожидание</span>`;
+
+    const timeHtml = app.released && app.releaseTime
+      ? `<span class="release-time">${app.releaseTime}</span>`
+      : '';
+
+    const urlShort = app.baseUrl.replace('https://apps.apple.com/', '');
+
     return `
       <div class="app-item">
-        <img class="app-icon" src="${info?.icon || ''}" />
-        <div class="app-info">
-          <div class="app-name">${info?.name || '...'}</div>
-          <div class="app-url">${app.baseUrl}</div>
+        ${iconHtml}
+        <div class="app-body">
+          <div class="app-name">${escHtml(appName)}</div>
+          <div class="app-meta">${ratingHtml}</div>
+          <span class="app-url">${escHtml(urlShort)}</span>
+          <div class="geo-row">${geoHtml}</div>
         </div>
-        <div class="badge ${app.released ? 'released' : 'pending'}">
-          ${app.released ? 'Вышло' : 'Ожидание'}
+        <div class="app-right">
+          ${statusHtml}
+          ${timeHtml}
+          <button class="btn-delete" title="Удалить" onclick="removeApp('${escAttr(app.baseUrl)}')">✕</button>
         </div>
-      </div>
-    `;
+      </div>`;
   }));
 
   container.innerHTML = items.join('');
 }
 
+// ─── Helpers ──────────────────────────────────────────────
+
+function showNotice(text, type) {
+  const el = document.getElementById('notice');
+  el.textContent = text;
+  el.className = `notice ${type}`;
+  if (type === 'success' || type === 'info') {
+    setTimeout(() => { el.textContent = ''; el.className = 'notice'; }, 3000);
+  }
+}
+
+function extractId(url) {
+  const m = url.match(/id(\d+)/);
+  return m ? `ID ${m[1]}` : url;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function escAttr(str) {
+  return String(str).replace(/'/g, "\\'");
+}
+
+// ─── Init ─────────────────────────────────────────────────
+
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addApp();
+});
+
 setInterval(loadApps, 5000);
 loadApps();
 </script>
-
 </body>
 </html>

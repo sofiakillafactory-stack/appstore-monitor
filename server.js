@@ -6,16 +6,14 @@ const path = require("path");
 
 const app = express();
 
-// 👇 ВАЖНО: сначала статика
 app.use(express.static(__dirname));
-
 app.use(cors());
 app.use(express.json());
 
 // ─── Конфигурация ─────────────────────────────────────────
 
-const PORT = 3000;
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN; // 🔥 через env
+const PORT = process.env.PORT || 3000;
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const TELEGRAM_CHAT_ID = "7943665527";
 
 const CHECK_INTERVAL = "*/2 * * * *";
@@ -33,6 +31,10 @@ function log(message) {
 }
 
 async function sendTelegramMessage(text) {
+  if (!TELEGRAM_TOKEN) {
+    log("Нет TELEGRAM_TOKEN, сообщение не отправлено");
+    return;
+  }
   try {
     await axios.post(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       chat_id: TELEGRAM_CHAT_ID,
@@ -46,6 +48,13 @@ async function sendTelegramMessage(text) {
 
 function generateGeoUrls(baseUrl) {
   return GEOS.map((geo) => baseUrl.replace("/us/", `/${geo}/`));
+}
+
+function getTimeHHMM() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, "0");
+  const m = String(now.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
 }
 
 // ─── Проверка ─────────────────────────────────────────────
@@ -72,14 +81,20 @@ async function checkApp(app) {
       if (notAvailable) continue;
 
       const geo = geoApp.url.split("/")[3];
+      const releaseTime = getTimeHHMM();
 
       log(`🚀 Релиз найден в ${geo.toUpperCase()}`);
 
       await sendTelegramMessage(
-        `🚀 РЕЛИЗ!\n🌍 GEO: ${geo.toUpperCase()}\n🔗 ${geoApp.url}`
+        `🚀 РЕЛИЗ!\n🌍 GEO: ${geo.toUpperCase()}\n🕐 Время: ${releaseTime}\n🔗 ${geoApp.url}`
       );
 
+      geoApp.released = true;
+      geoApp.releaseTime = releaseTime;
+
+      // Если хотя бы в одном GEO вышло — считаем общим релизом
       app.released = true;
+      app.releaseTime = releaseTime;
       return;
 
     } catch (error) {
@@ -87,8 +102,6 @@ async function checkApp(app) {
     }
   }
 }
-
-// ─── Проверка всех приложений ─────────────────────────────
 
 async function checkAllApps() {
   if (apps.length === 0) {
@@ -105,7 +118,6 @@ async function checkAllApps() {
 
 // ─── API ─────────────────────────────────────────────────
 
-// Главная страница (UI)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
@@ -123,9 +135,7 @@ app.post("/add", (req, res) => {
   }
 
   if (!url.includes("/us/app/")) {
-    return res.status(400).json({
-      error: "Нужен ID или ссылка App Store",
-    });
+    return res.status(400).json({ error: "Нужен ID или ссылка App Store" });
   }
 
   const exists = apps.find((a) => a.baseUrl === url);
@@ -136,16 +146,17 @@ app.post("/add", (req, res) => {
   const geoUrls = generateGeoUrls(url).map((u) => ({
     url: u,
     released: false,
+    releaseTime: null,
   }));
 
   apps.push({
     baseUrl: url,
     geos: geoUrls,
     released: false,
+    releaseTime: null,
   });
 
   log(`Добавлено: ${url}`);
-
   res.json({ message: "Добавлено", geos: geoUrls });
 });
 
@@ -154,10 +165,39 @@ app.get("/list", (req, res) => {
   res.json(apps);
 });
 
+// Удаление
+app.delete("/remove", (req, res) => {
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: "Нужно указать url" });
+  }
+
+  const index = apps.findIndex((a) => a.baseUrl === url);
+
+  if (index === -1) {
+    return res.status(404).json({ error: "Не найдено" });
+  }
+
+  apps.splice(index, 1);
+  log(`Удалено: ${url}`);
+  res.json({ message: "Удалено" });
+});
+
+// Ручная проверка
+app.post("/check", async (req, res) => {
+  log("Ручная проверка запущена");
+  checkAllApps().catch(err => {
+    log("Ошибка ручной проверки: " + err.message);
+  });
+  res.json({ message: "Проверка запущена" });
+});
+
 // ─── Запуск ──────────────────────────────────────────────
 
 cron.schedule(CHECK_INTERVAL, checkAllApps);
 
 app.listen(PORT, () => {
   log(`Сервер запущен на порту ${PORT}`);
+  log("🚀 Сервер полностью готов");
 });
