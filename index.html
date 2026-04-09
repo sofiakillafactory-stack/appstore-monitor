@@ -139,7 +139,7 @@ async function addApp() {
     return;
   }
 
-  if (!/^\\d+$/.test(url) && !url.includes('apps.apple.com')) {
+  if (!/^\d+$/.test(url) && !url.includes('apps.apple.com')) {
     showNotice('Введите ID или ссылку', 'error');
     return;
   }
