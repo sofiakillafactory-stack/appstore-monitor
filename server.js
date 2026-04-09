@@ -2,15 +2,20 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const cron = require("node-cron");
+const path = require("path");
 
 const app = express();
+
+// 👇 ВАЖНО: сначала статика
+app.use(express.static(__dirname));
+
 app.use(cors());
 app.use(express.json());
 
 // ─── Конфигурация ─────────────────────────────────────────
 
 const PORT = 3000;
-const TELEGRAM_TOKEN = "8541538073:AAHpp2cg95Z2xw55HhLRQfPsJm1ZCJzZwDI";
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN; // 🔥 через env
 const TELEGRAM_CHAT_ID = "7943665527";
 
 const CHECK_INTERVAL = "*/2 * * * *";
@@ -66,7 +71,6 @@ async function checkApp(app) {
 
       if (notAvailable) continue;
 
-      // 🎉 НАШЛИ ПЕРВЫЙ РЕЛИЗ
       const geo = geoApp.url.split("/")[3];
 
       log(`🚀 Релиз найден в ${geo.toUpperCase()}`);
@@ -101,7 +105,12 @@ async function checkAllApps() {
 
 // ─── API ─────────────────────────────────────────────────
 
-// Добавление (ID или ссылка)
+// Главная страница (UI)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// Добавление
 app.post("/add", (req, res) => {
   let { url } = req.body;
 
@@ -109,7 +118,6 @@ app.post("/add", (req, res) => {
     return res.status(400).json({ error: "Нужно указать ID или ссылку" });
   }
 
-  // если ввели просто цифры — превращаем в ссылку
   if (/^\d+$/.test(url)) {
     url = `https://apps.apple.com/us/app/id${url}`;
   }
@@ -151,5 +159,5 @@ app.get("/list", (req, res) => {
 cron.schedule(CHECK_INTERVAL, checkAllApps);
 
 app.listen(PORT, () => {
-  log(`Сервер: http://localhost:${PORT}`);
+  log(`Сервер запущен на порту ${PORT}`);
 });
