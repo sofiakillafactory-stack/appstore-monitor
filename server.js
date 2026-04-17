@@ -14,7 +14,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
-const TELEGRAM_CHAT_ID = "7943665527";
+const TELEGRAM_CHAT_ID = "-1003778152781";
 
 const CHECK_INTERVAL = "*/2 * * * *";
 const GEOS = ["us", "ru", "jp", "de"];
